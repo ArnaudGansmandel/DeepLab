@@ -1,12 +1,12 @@
-# DeepLab
+# Image segmentation using DeepLab 
 Reproduction of the DeepLab algorithm for semantic image segmentation
 
-# Image segmentation using DeepLab 
 
 In order to train the DeepLab model, we use the PASCAL VOC2012 dataset [devkit_doc.pdf](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/devkit_doc.pdf)
 
-Below, the directory architecture of this project 
-    project_name/
+Below, the directory architecture of this project
+
+    DeepLab/
     │
     ├── data/                          # All data-related directories and files
     │   ├── raw/                       # Original, immutable data dump
