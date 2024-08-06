@@ -13,7 +13,6 @@ class DeepLabV3Plus(Model):
             name="DeepLabV3Plus",
             **kwargs
         ):
-        #super(DeepLabV3Plus, self).__init__(name=name, **kwargs)
         super().__init__(name=name, **kwargs)
         self.backbone = Backbone(dropout_rate=dropout_rate)
         self.aspp = ASPP(dropout_rate=dropout_rate)

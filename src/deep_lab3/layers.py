@@ -16,7 +16,6 @@ class ConvolutionBlock(layers.Layer):
             name='convolution_block',
             **kwargs
         ):
-        #super(ConvolutionBlock, self).__init__(name=name, **kwargs)
         super().__init__(name=name, **kwargs)
         self.conv = layers.Conv2D(filters, kernel_size, strides=strides, dilation_rate=dilation_rate, padding=padding, use_bias=False)
         self.bn = layers.BatchNormalization()
@@ -47,7 +46,6 @@ class ResNetBlock(layers.Layer):
             name='resnet_block',
             **kwargs
         ):
-        #super(ResNetBlock, self).__init__(name=name, **kwargs)
         super().__init__(name=name, **kwargs)
         self.conv1 = ConvolutionBlock(filters, 1, dilation_rate=dilation_rate * multi_grid[0], activation=True, dropout_rate=dropout_rate)
         self.conv2 = ConvolutionBlock(filters, 3, dilation_rate=dilation_rate * multi_grid[1], activation=True, dropout_rate=dropout_rate)
@@ -74,7 +72,6 @@ class CascadedBlocks(layers.Layer):
             name='cascaded_blocks',
             **kwargs
         ):
-        #super(CascadedBlocks, self).__init__(name=name, **kwargs)
         super().__init__(name=name, **kwargs)
         self.num_extra_blocks = num_extra_blocks
         self.resnet_blocks = [ResNetBlock(dropout_rate=dropout_rate) for _ in range(num_extra_blocks)]
@@ -109,7 +106,6 @@ class Backbone(layers.Layer):
             dropout_rate=0.0,
             name='backbone',
             **kwargs):
-        #super(Backbone, self).__init__(name=name, **kwargs)
         super().__init__(name=name, **kwargs)
         self.resnet_model = ResNet101(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
         self.cascaded_blocks = CascadedBlocks(dropout_rate=dropout_rate)
@@ -141,7 +137,6 @@ class ASPP(layers.Layer):
             filters=256, 
             dropout_rate=0.0
         ):
-        #super(ASPP, self).__init__()
         super().__init__()
         self.conv1 = ConvolutionBlock(filters, 1, dropout_rate=dropout_rate)
         self.conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
@@ -185,7 +180,6 @@ class ASPP(layers.Layer):
 @tf.keras.utils.register_keras_serializable()
 class Decoder(layers.Layer):
     def __init__(self, num_classes, filters=256, dropout_rate=0.0):
-        #super(Decoder, self).__init__()
         super().__init__()
         self.decoder_conv1 = ConvolutionBlock(48, 1, dropout_rate=dropout_rate)
         self.decoder_conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
