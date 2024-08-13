@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import Model
 
-from deep_lab3.layers import ASPP, Decoder, Backbone
+from deep_lab.layers import ASPP, Decoder, Backbone
 from utils.network_inspection import print_all_layers
 
 @tf.keras.utils.register_keras_serializable()

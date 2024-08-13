@@ -1,5 +1,5 @@
 
-from src.deep_lab3.data_processing import create_tf_dataset, load_and_preprocess_data
+from src.deep_lab.data_processing import create_tf_dataset, load_and_preprocess_data
 
 
 def train_and_save_model(model_to_train, path_to_save_model):
@@ -21,6 +21,6 @@ def train_and_save_model(model_to_train, path_to_save_model):
     model.save(path_to_save_model)
 
 if __name__ == "__main__":
-    from src.deep_lab3.model_gpt import DeepLabV3Plus
+    from src.deep_lab.model_gpt import DeepLabV3Plus
 
     train_and_save_model(DeepLabV3Plus, r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\CodeV3\deep-lab2\saved_model\my_model.h5')

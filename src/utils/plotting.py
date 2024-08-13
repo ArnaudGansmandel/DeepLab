@@ -1,4 +1,4 @@
-from deep_lab3.data_processing import preprocess_image, preprocess_mask
+from deep_lab.data_processing import preprocess_image, preprocess_mask
 from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
