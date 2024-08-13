@@ -28,15 +28,20 @@ class DeepLabV3Plus(Model):
 
 # Example usage
 if __name__ == "__main__":
-
     IMG_SIZE = 224
     NUM_CLASSES = 21
+    input = tf.keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))    
 
-    model = DeepLabV3Plus(dropout_rate=0.5)
-    input = tf.keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-    output = model(input)
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
-    
-    # Print summary and all layers
-    model.summary()
-    print_all_layers(model)
+    deeplab_model_training = DeepLabV3Plus()
+    output = deeplab_model_training(input, training=True)
+
+    deeplab_model_training = Model(inputs=input, outputs=output)
+    deeplab_model_training.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
+    deeplab_model_training.summary()
+
+    deeplab_model_inference = DeepLabV3Plus()
+    output = deeplab_model_inference(input, training=False)
+
+    deeplab_model_inference = Model(inputs=input, outputs=output)
+    deeplab_model_inference.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
+    deeplab_model_inference.summary()
