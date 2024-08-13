@@ -10,6 +10,8 @@ def print_all_layers(layer, indent=0):
     if isinstance(layer, layers.Conv2D):
         layer_info += f", Filters: {layer.filters}, Kernel Size: {layer.kernel_size}, Strides: {layer.strides}, Dilation Rate: {layer.dilation_rate}"
 
+    layer_info += f", Input: {layer.input}"
+    
     print(layer_info)
 
     if hasattr(layer, 'layers'):
