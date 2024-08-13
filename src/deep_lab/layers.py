@@ -76,27 +76,13 @@ class CascadedBlocks(layers.Layer):
         self.num_extra_blocks = num_extra_blocks
         self.resnet_blocks = [ResNetBlock(dropout_rate=dropout_rate) for _ in range(num_extra_blocks)]
     
-    def set_dilation_rates(self, dilation_rates):
-        self.resnet_blocks[0].conv1.conv.dilation_rate = (dilation_rates, dilation_rates)
-        self.resnet_blocks[0].conv2.conv.dilation_rate = (dilation_rates, dilation_rates)
-        self.resnet_blocks[0].conv3.conv.dilation_rate = (dilation_rates, dilation_rates)
-
-        self.resnet_blocks[1].conv1.conv.dilation_rate = (2*dilation_rates, 2*dilation_rates)
-        self.resnet_blocks[1].conv2.conv.dilation_rate = (2*dilation_rates, 2*dilation_rates)
-        self.resnet_blocks[1].conv3.conv.dilation_rate = (2*dilation_rates, 2*dilation_rates)
-
-        self.resnet_blocks[2].conv1.conv.dilation_rate = (4*dilation_rates, 4*dilation_rates)
-        self.resnet_blocks[2].conv2.conv.dilation_rate = (4*dilation_rates, 4*dilation_rates)
-        self.resnet_blocks[2].conv3.conv.dilation_rate = (4*dilation_rates, 4*dilation_rates)
-
     def call(self, inputs, training=None):
         dilation_rate = 4 if training else 8
         x = inputs
         for i in range(self.num_extra_blocks):
+            self.resnet_blocks[i].dilation_rate = (dilation_rate, dilation_rate)
             x = self.resnet_blocks[i](x, training=training)
-            
             dilation_rate *= 2
-        self.set_dilation_rates(dilation_rate)
         return x
 
 @tf.keras.utils.register_keras_serializable()
@@ -114,7 +100,7 @@ class Backbone(layers.Layer):
         for layer in self.resnet_model.layers:
             if 'conv4_block' in layer.name or 'conv5_block' in layer.name:
                 if isinstance(layer, layers.Conv2D):
-                    if 'conv4_block1_1_conv' or 'conv4_block1_0_conv' in layer.name:
+                    if 'conv4_block1_1_conv' in layer.name or 'conv4_block1_0_conv' in layer.name:
                         layer.strides = (2 if output_stride == 16 else 1, 2 if output_stride == 16 else 1)
                     if 'conv4_block' in layer.name:
                         layer.dilation_rate = (1 if output_stride == 16 else 2)
@@ -122,12 +108,11 @@ class Backbone(layers.Layer):
                         layer.strides = (1, 1)
                         layer.dilation_rate = (2 if output_stride == 16 else 4)
 
-    def call(self, inputs, training=True):
+    def call(self, inputs, training=None):
         output_stride = 16 if training else 8
         self.modify_resnet_layers(output_stride=output_stride)
         x = self.resnet_model(inputs, training=training)
         x = self.cascaded_blocks(x, training=training)
-        print(x.shape)
         return x
 
 @tf.keras.utils.register_keras_serializable()
@@ -189,9 +174,7 @@ class Decoder(layers.Layer):
     def call(self, inputs, low_level_feature, training=None):
         if training:
             x = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(inputs)
-            print('training = True')
         else:
-            print('training = False')
             x = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(inputs)
         low_level_feature = self.decoder_conv1(low_level_feature, training=training)
         x = tf.concat([x, low_level_feature], axis=-1)
@@ -205,10 +188,19 @@ if __name__ == "__main__":
     # Example usage
     IMG_SIZE = 224
     input_shape = (IMG_SIZE, IMG_SIZE, 3)
-    resnet_with_atrous_blocks = Backbone(dropout_rate=0.5)
-    
     input = tf.keras.Input(shape=input_shape)
-    output = resnet_with_atrous_blocks(input)
-    resnet_with_atrous_blocks = Model(inputs=input, outputs=output)
-    resnet_with_atrous_blocks.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    resnet_with_atrous_blocks.summary()
+    resnet_with_atrous_blocks_training = Backbone()
+    resnet_with_atrous_blocks_inference = Backbone()
+
+    output_training = resnet_with_atrous_blocks_training(input, training=True)
+    output_inference = resnet_with_atrous_blocks_inference(input, training=False)
+    
+    print("Backbone in training mode")
+    resnet_with_atrous_blocks_training = Model(inputs=input, outputs=output_training)
+    resnet_with_atrous_blocks_training.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    resnet_with_atrous_blocks_training.summary()
+
+    print("Backbone in inference mode")
+    resnet_with_atrous_blocks_inference = Model(inputs=input, outputs=output_inference)
+    resnet_with_atrous_blocks_inference.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    resnet_with_atrous_blocks_inference.summary()
