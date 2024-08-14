@@ -169,7 +169,7 @@ class Decoder(layers.Layer):
         self.decoder_conv1 = ConvolutionBlock(48, 1, dropout_rate=dropout_rate)
         self.decoder_conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
         self.decoder_conv3 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
-        self.final_conv = layers.Conv2D(num_classes, 1, activation='softmax')
+        self.final_conv = layers.Conv2D(num_classes, 1)
 
     def call(self, inputs, low_level_feature, training=None):
         if training:
