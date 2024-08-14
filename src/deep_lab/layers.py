@@ -164,7 +164,7 @@ class ASPP(layers.Layer):
 
 @tf.keras.utils.register_keras_serializable()
 class Decoder(layers.Layer):
-    def __init__(self, num_classes, filters=256, dropout_rate=0.0):
+    def __init__(self, num_classes=21, filters=256, dropout_rate=0.0):
         super().__init__()
         self.decoder_conv1 = ConvolutionBlock(48, 1, dropout_rate=dropout_rate)
         self.decoder_conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
