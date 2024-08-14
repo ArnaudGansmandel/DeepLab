@@ -8,7 +8,6 @@ from utils.network_inspection import print_all_layers
 class DeepLabV3Plus(Model):
     def __init__(
             self,
-            num_classes=21,
             dropout_rate=0.0,
             name="DeepLabV3Plus",
             **kwargs
@@ -16,7 +15,7 @@ class DeepLabV3Plus(Model):
         super().__init__(name=name, **kwargs)
         self.backbone = Backbone(dropout_rate=dropout_rate)
         self.aspp = ASPP(dropout_rate=dropout_rate)
-        self.decoder = Decoder(num_classes, dropout_rate=dropout_rate)
+        self.decoder = Decoder(dropout_rate=dropout_rate)
 
     def call(self, inputs, training=False):
         x = self.backbone(inputs, training=training)
@@ -32,6 +31,7 @@ if __name__ == "__main__":
     NUM_CLASSES = 21
     input = tf.keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))    
 
+    print("DeepLabV3Plus in training mode")
     deeplab_model_training = DeepLabV3Plus()
     output = deeplab_model_training(input, training=True)
 
@@ -39,6 +39,7 @@ if __name__ == "__main__":
     deeplab_model_training.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
     deeplab_model_training.summary()
 
+    print("DeepLabV3Plus in inference mode")
     deeplab_model_inference = DeepLabV3Plus()
     output = deeplab_model_inference(input, training=False)
 
