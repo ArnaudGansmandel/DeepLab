@@ -7,7 +7,7 @@ data/
 # Ignoring results
 notebooks/results/
 results/
-images_to_segment
+images_to_segment/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
