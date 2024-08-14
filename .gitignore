@@ -1,4 +1,4 @@
-# Pascal VOC2012
+# Ignoring Pascal VOC2012 dataset
 data/
 
 # Igoring the models weights
@@ -7,6 +7,7 @@ data/
 # Ignoring results
 notebooks/results/
 results/
+images_to_segment
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
