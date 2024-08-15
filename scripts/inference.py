@@ -40,4 +40,17 @@ def predict_and_display(model, image, original_mask=None):
 # `sample_image` is a numpy array or tensor of shape (height, width, channels)
 # `sample_mask` is the ground truth mask of shape (height, width)
 
-predict_and_display(model, sample_image, original_mask=sample_mask)
+image_dir = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\images_to_segment\inputs'
+
+deep_lab_model = tf.keras.models.load_model(r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\deep_lab_model')
+
+image_path = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\images_to_segment\inputs\image_1.jpg'  # Replace with the path to your image file
+
+image = tf.keras.preprocessing.image.load_img(image_path)
+
+sample_image = tf.keras.preprocessing.image.img_to_array(image)
+
+sample_mask = None  # Replace with the path to your mask file if available
+
+predict_and_display(deep_lab_model, sample_image, original_mask=sample_mask)
+
