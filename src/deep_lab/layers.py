@@ -1,6 +1,7 @@
 import tensorflow as tf
-from tensorflow.keras import layers, Model # type: ignore
-from tensorflow.keras.applications import ResNet101 # type: ignore
+from tensorflow.keras import layers
+from tensorflow.keras.models import Model 
+from tensorflow.keras.applications import ResNet101
 
 @tf.keras.utils.register_keras_serializable()
 class ConvolutionBlock(layers.Layer):

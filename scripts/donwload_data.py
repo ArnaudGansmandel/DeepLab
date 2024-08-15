@@ -1,6 +1,6 @@
 if __name__ == "__main__":
     import os
-    from utils.downloader import download_and_extract
+    from data_pipeline.sourcing.downloader import download_and_extract
 
     # Constants
     VOC_URL = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'

@@ -1,8 +1,7 @@
 import tensorflow as tf
-from tensorflow.keras import Model
+from tensorflow.keras.models import Model
 
 from deep_lab.layers import ASPP, Decoder, Backbone
-from utils.network_inspection import print_all_layers
 
 @tf.keras.utils.register_keras_serializable()
 class DeepLabV3Plus(Model):
@@ -12,7 +11,7 @@ class DeepLabV3Plus(Model):
             name="DeepLabV3Plus",
             **kwargs
         ):
-        super().__init__(name=name, **kwargs)
+        super(DeepLabV3Plus, self).__init__(name=name, **kwargs)
         self.backbone = Backbone(dropout_rate=dropout_rate)
         self.aspp = ASPP(dropout_rate=dropout_rate)
         self.decoder = Decoder(dropout_rate=dropout_rate)
