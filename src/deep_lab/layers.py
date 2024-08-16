@@ -109,12 +109,22 @@ class Backbone(layers.Layer):
                         layer.strides = (1, 1)
                         layer.dilation_rate = (2 if output_stride == 16 else 4)
 
+    def extract_low_level_feature(self, inputs):
+        intermediate_model = tf.keras.Model(inputs=self.resnet_model.input,
+                                            outputs=self.resnet_model.get_layer('conv2_block3_out').output)
+        low_level_feature = intermediate_model(inputs)
+        return low_level_feature
+    
     def call(self, inputs, training=None):
         output_stride = 16 if training else 8
         self.modify_resnet_layers(output_stride=output_stride)
         x = self.resnet_model(inputs, training=training)
         x = self.cascaded_blocks(x, training=training)
-        return x
+
+        low_level_feature = self.extract_low_level_feature(inputs)
+        low_level_feature = tf.keras.layers.Lambda(lambda x: tf.stop_gradient(x))(low_level_feature)  # Avoid backpropagation
+
+        return x, low_level_feature
 
 @tf.keras.utils.register_keras_serializable()
 class ASPP(layers.Layer):
