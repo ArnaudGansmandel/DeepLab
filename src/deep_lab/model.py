@@ -16,6 +16,7 @@ class DeepLabV3Plus(Model):
         self.aspp = ASPP(dropout_rate=dropout_rate)
         self.decoder = Decoder(dropout_rate=dropout_rate)
 
+    @tf.function
     def call(self, inputs, training=None):
         x, low_level_feature = self.backbone(inputs, training=training)
         x = self.aspp(x, training=training)

@@ -27,6 +27,7 @@ class ConvolutionBlock(layers.Layer):
         if self.dropout_rate > 0:
             self.dropout = layers.Dropout(self.dropout_rate)
 
+    @tf.function
     def call(self, inputs, training=None):
         x = self.conv(inputs)
         x = self.bn(x, training=training)
@@ -54,7 +55,8 @@ class ResNetBlock(layers.Layer):
 
         self.add = layers.Add()
         self.relu_out = layers.ReLU()
-
+        
+    @tf.function
     def call(self, inputs, training=None):
         x = self.conv1(inputs, training=training)
         x = self.conv2(x, training=training)
@@ -77,6 +79,7 @@ class CascadedBlocks(layers.Layer):
         self.num_extra_blocks = num_extra_blocks
         self.resnet_blocks = [ResNetBlock(dropout_rate=dropout_rate) for _ in range(num_extra_blocks)]
     
+    @tf.function
     def call(self, inputs, training=None):
         dilation_rate = 4 if training else 8
         x = inputs
@@ -85,6 +88,19 @@ class CascadedBlocks(layers.Layer):
             x = self.resnet_blocks[i](x, training=training)
             dilation_rate *= 2
         return x
+
+@tf.keras.utils.register_keras_serializable()
+class FeatureExtractor(layers.Layer):
+    def __init__(self, model, layer_name, name='feature_extractor', **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.model = model
+        self.layer_name = layer_name
+
+    @tf.function
+    def call(self, inputs):
+        intermediate_model = tf.keras.Model(inputs=self.model.input,
+                                            outputs=self.model.get_layer(self.layer_name).output)
+        return intermediate_model(inputs)
 
 @tf.keras.utils.register_keras_serializable()
 class Backbone(layers.Layer):
@@ -96,6 +112,7 @@ class Backbone(layers.Layer):
         super().__init__(name=name, **kwargs)
         self.resnet_model = ResNet101(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
         self.cascaded_blocks = CascadedBlocks(dropout_rate=dropout_rate)
+        self.feature_extractor = FeatureExtractor(self.resnet_model, 'conv2_block3_out')
 
     def modify_resnet_layers(self, output_stride):
         for layer in self.resnet_model.layers:
@@ -108,20 +125,15 @@ class Backbone(layers.Layer):
                     if 'conv5_block' in layer.name:
                         layer.strides = (1, 1)
                         layer.dilation_rate = (2 if output_stride == 16 else 4)
-
-    def extract_low_level_feature(self, inputs):
-        intermediate_model = tf.keras.Model(inputs=self.resnet_model.input,
-                                            outputs=self.resnet_model.get_layer('conv2_block3_out').output)
-        low_level_feature = intermediate_model(inputs)
-        return low_level_feature
     
+    @tf.function
     def call(self, inputs, training=None):
         output_stride = 16 if training else 8
         self.modify_resnet_layers(output_stride=output_stride)
         x = self.resnet_model(inputs, training=training)
         x = self.cascaded_blocks(x, training=training)
 
-        low_level_feature = self.extract_low_level_feature(inputs)
+        low_level_feature = self.feature_extractor(inputs, training=training)
         low_level_feature = tf.keras.layers.Lambda(lambda x: tf.stop_gradient(x))(low_level_feature)  # Avoid backpropagation
 
         return x, low_level_feature
@@ -144,17 +156,18 @@ class ASPP(layers.Layer):
 
     def choice_dilation_rates(self, output_stride):
         if output_stride == 16:
-            return [1, 6, 12, 18]
+            return [6, 12, 18]
         elif output_stride == 8:
-            return [1, 12, 24, 36]
+            return [12, 24, 36]
         else:
             raise ValueError("Unsupported output stride: {}".format(output_stride))
 
     def set_dilation_rates(self, dilation_rates):
-        self.conv2.conv.dilation_rate = (dilation_rates[1], dilation_rates[1])
-        self.conv3.conv.dilation_rate = (dilation_rates[2], dilation_rates[2])
-        self.conv4.conv.dilation_rate = (dilation_rates[3], dilation_rates[3])
+        convs = [self.conv2, self.conv3, self.conv4]
+        for conv, rate in zip(convs, dilation_rates):
+            conv.conv.dilation_rate = (rate, rate)
 
+    @tf.function
     def call(self, inputs, training=None):
         output_stride = 16 if training else 8
         dilation_rates = self.choice_dilation_rates(output_stride)
@@ -182,6 +195,7 @@ class Decoder(layers.Layer):
         self.decoder_conv3 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
         self.final_conv = layers.Conv2D(num_classes, 1)
 
+    @tf.function
     def call(self, inputs, low_level_feature, training=None):
         if training:
             x = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(inputs)
