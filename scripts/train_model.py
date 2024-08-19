@@ -1,10 +1,40 @@
-import tensorflow as tf
-from tensorflow.keras.callbacks import EarlyStopping
 from data_pipeline.preprocessing.data_processing import create_tf_dataset, load_and_preprocess_data
-from deep_lab.learning_rate import PolyDecay
+from deep_lab.model import DeepLabV3Plus
+# from src.data.data_loader import load_data
+from training.trainer import Trainer
 
+# Training configuration
+config = {
+    'learning_rate': 0.001,
+    'epochs': 20,
+    'checkpoint_path': 'results/checkpoints/model.keras',
+    'model_save_path': 'results/models/model.h5',
+    'num_classes': 21
+}
 
-def train_and_save_model(model_to_train, path_to_save_model=None):
+def main(train_dataset, val_dataset):
+    # Load data
+    #train_dataset, val_dataset = load_data('path_to_data')
+
+    # Create the model
+    model = DeepLabV3Plus()
+
+    # Create a Trainer instance
+    trainer = Trainer(model=model, train_dataset=train_dataset, val_dataset=val_dataset, config=config)
+    
+    # Load model from checkpoint if available
+    trainer.load_model()
+    
+    # Train the model
+    trainer.train()
+
+    # Evaluate the model
+    trainer.evaluate()
+
+    # Save the final model
+    trainer.save_model()
+
+if __name__ == "__main__":
     # Step 1: Preprocess the data
     image_dir = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\data\VOCdevkit\VOC2012\SegmentationClass'
     mask_dir = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\data\VOCdevkit\VOC2012\SegmentationObject'
@@ -15,26 +45,4 @@ def train_and_save_model(model_to_train, path_to_save_model=None):
     train_dataset = create_tf_dataset(train_images, train_masks)
     val_dataset = create_tf_dataset(val_images, val_masks)
 
-    # Step 3: Train the model
-    initial_lr = 0.001
-    epochs = 50
-    poly_decay = PolyDecay(initial_learning_rate=initial_lr, max_epochs=epochs)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=poly_decay, weight_decay=0.0005)
-
-    model = model_to_train
-    model.compile(optimizer=optimizer, 
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                  metrics=['accuracy', tf.keras.metrics.MeanIoU(num_classes=21)])
-
-    # Définition de l'arrêt anticipé (early stopping)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
-
-    history = model.fit(train_dataset, validation_data=val_dataset, epochs=5, callbacks=[early_stopping])
-
-    if path_to_save_model is not None:
-        model.save(path_to_save_model)  
-
-if __name__ == "__main__":
-    from deep_lab.model import DeepLabV3Plus
-
-    train_and_save_model(DeepLabV3Plus(dropout_rate=0.3), r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\results\models\deep_lab_v3_plus_model.h5')
+    main(train_dataset, val_dataset)
