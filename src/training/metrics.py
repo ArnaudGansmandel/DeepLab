@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 class UpdatedMeanIoU(tf.keras.metrics.MeanIoU):
   def __init__(self,
                y_true=None,
