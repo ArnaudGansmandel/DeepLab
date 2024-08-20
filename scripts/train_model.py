@@ -7,30 +7,18 @@ from training.trainer import Trainer
 config = {
     'learning_rate': 0.001,
     'epochs': 20,
-    'checkpoint_path': 'results/checkpoints/model.keras',
-    'model_save_path': 'results/models/model.h5',
+    'batch_size': 16,
     'num_classes': 21,
     'img_size': 224,
-    'batch_size': 16
+    'checkpoint_path': 'results/checkpoints/model.keras',
+    'model_save_path': 'results/models/model.h5',
 }
 
-
-
 if __name__ == "__main__":
-    ###################################################################
-    # # Step 1: Preprocess the data
-    # image_dir = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\data\VOCdevkit\VOC2012\SegmentationClass'
-    # mask_dir = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\data\VOCdevkit\VOC2012\SegmentationObject'
-
-    # train_images, val_images, train_masks, val_masks = load_and_preprocess_data(image_dir, mask_dir)
-
-    # # Step 2: Create TensorFlow datasets
-    # train_dataset = create_tf_dataset(train_images, train_masks)
-    # val_dataset = create_tf_dataset(val_images, val_masks)
-    ###################################################################
      # Load data
     data_loader = DataLoader(config)
-    #train_dataset, val_dataset = load_data('path_to_data')
+
+    # Create the datasets
     train_dataset = data_loader.load_data('train', augment=True)
     val_dataset = data_loader.load_data('val', augment=False)
     trainval_dataset = data_loader.load_data('trainval', augment=True)
