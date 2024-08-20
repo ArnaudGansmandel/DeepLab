@@ -72,3 +72,14 @@ def create_tf_dataset(images: list, masks: list) -> tf.data.Dataset:
     dataset = tf.data.Dataset.from_tensor_slices((images, masks))
     dataset = dataset.shuffle(len(images)).batch(8).prefetch(tf.data.AUTOTUNE)
     return dataset
+
+if __name__ == "__main__":
+    # Step 1: Preprocess the data
+    image_dir = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\data\VOCdevkit\VOC2012\SegmentationClass'
+    mask_dir = r'D:\01_Arnaud\Etudes\04_CNAM\RCP209\Projet\DeepLab\data\VOCdevkit\VOC2012\SegmentationObject'
+
+    train_images, val_images, train_masks, val_masks = load_and_preprocess_data(image_dir, mask_dir)
+
+    # Step 2: Create TensorFlow datasets
+    train_dataset = create_tf_dataset(train_images, train_masks)
+    val_dataset = create_tf_dataset(val_images, val_masks)
