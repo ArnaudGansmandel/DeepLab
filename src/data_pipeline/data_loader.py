@@ -1,21 +1,22 @@
 import os
+import pathlib
 import tensorflow as tf
-from data_pipeline.preprocessing import Preprocessor 
+from data_pipeline.preprocessing.data_processing import Preprocessor
 from data_pipeline.augmentation import DataAugmentation
 
 class DataLoader:
-    def __init__(self, dir_path, config):
-        self.dir_path = dir_path
-        self.config = config
-        self.img_size = config['img_size']
+    def __init__(self, config):
         self.batch_size = config['batch_size']
-        self.preprocessor = Preprocessor(img_size=self.img_size)
-        self.augmentor = DataAugmentation(img_size=self.img_size)
-        self.image_dir = os.path.join(dir_path, 'images')
-        self.mask_dir = os.path.join(dir_path, 'masks')
+        self.preprocessor = Preprocessor(config)
+        self.augmentor = DataAugmentation(config)
 
-        self.image_list_ds = tf.data.Dataset.list_files(os.path.join(self.image_dir, '*/*'), shuffle=False)
-        self.mask_list_ds = tf.data.Dataset.list_files(os.path.join(self.mask_dir, '*/*'), shuffle=False)
+    def create_file_dataset(self, dir_path):
+            image_dir = pathlib.Path(os.path.join('data', dir_path, 'images'))
+            mask_dir = pathlib.Path(os.path.join('data', dir_path, 'masks'))
+            image_list_ds = tf.data.Dataset.list_files(str(image_dir/'*'))
+            mask_list_ds = tf.data.Dataset.list_files(str(mask_dir/'*'))
+
+            return image_list_ds, mask_list_ds
 
     def __configure_for_performance(self, ds, shuffle=True):
         AUTOTUNE = tf.data.AUTOTUNE
@@ -26,15 +27,18 @@ class DataLoader:
         ds = ds.prefetch(buffer_size=AUTOTUNE)
         return ds
 
-    def load_data(self, augment=False):
-        image_dataset = self.image_list_ds.map(lambda x: self.preprocessor.preprocess_image(x),
+    def load_data(self, dir_path, augment=False):
+        image_list_ds, mask_list_ds = self.create_file_dataset(dir_path)
+        image_dataset = image_list_ds.map(lambda x: self.preprocessor.preprocess_image(x),
                                                num_parallel_calls=tf.data.AUTOTUNE)
-        mask_dataset = self.mask_list_ds.map(lambda x: self.preprocessor.preprocess_mask(x, self.config['num_classes']),
+        mask_dataset = mask_list_ds.map(lambda x: self.preprocessor.preprocess_mask(x),
                                              num_parallel_calls=tf.data.AUTOTUNE)
         dataset = tf.data.Dataset.zip((image_dataset, mask_dataset))
-        dataset = self.__configure_for_performance(dataset)
 
         if augment:
             dataset = dataset.map(lambda x, y: self.augmentor.augment(x, y),
                                   num_parallel_calls=tf.data.AUTOTUNE)
+        
+        dataset = self.__configure_for_performance(dataset)
+
         return dataset
