@@ -11,7 +11,7 @@ config = {
     'num_classes': 21,
     'img_size': 224,
     'checkpoint_path': 'results/checkpoints/model.keras',
-    'model_save_path': 'results/models/model.h5',
+    'model_save_path': 'results/models/top_model.h5',
 }
 
 if __name__ == "__main__":
@@ -20,18 +20,21 @@ if __name__ == "__main__":
 
     # Create the datasets
     train_dataset = data_loader.load_data('train', augment=True)
-    val_dataset = data_loader.load_data('val', augment=False)
+    val_dataset = data_loader.load_data('val', augment=True)
     trainval_dataset = data_loader.load_data('trainval', augment=True)
 
     # Create the model
     model = DeepLabV3Plus()
+
+    for layer in model.backbone.resnet_model.layers:
+        layer.trainable = False
 
     # Create a Trainer instance
     trainer = Trainer(model=model, train_dataset=train_dataset, val_dataset=val_dataset, config=config)
     
     # Load model from checkpoint if available
     trainer.load_from_checkpoint()
-    
+
     # Train the model
     trainer.train()
 
