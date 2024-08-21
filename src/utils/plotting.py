@@ -1,4 +1,4 @@
-from data_pipeline.preprocessing.data_processing import preprocess_image, preprocess_mask
+from data_pipeline.processing import preprocess_image, preprocess_mask
 from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
