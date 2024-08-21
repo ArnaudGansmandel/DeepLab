@@ -58,8 +58,11 @@ class Trainer:
         results = self.model.evaluate(self.val_dataset)
         return results
 
-    def save_model(self):
-        self.model.save(self.config['model_save_path'])
+    def save_model(self, model_weight_saving_path=None):
+        if model_weight_saving_path:
+            self.model.save(model_weight_saving_path)
+        else:
+            self.model.save(self.config['model_save_path'])
 
     def load_from_checkpoint(self):
         if os.path.exists(self.config['checkpoint_path']):
