@@ -50,7 +50,7 @@ class Trainer:
             self.train_dataset,
             validation_data=self.val_dataset,
             epochs=self.config['epochs']
-            #callbacks=self.callbacks
+            callbacks=self.callbacks
         )
         return history
     
