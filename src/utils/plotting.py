@@ -1,4 +1,4 @@
-from data_pipeline.processing import preprocess_image, preprocess_mask
+from data_pipeline.processing import Preprocessor
 from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -45,8 +45,9 @@ def display_image_and_mask(image_path: str, mask_path: str) -> None:
     original_mask = tf.keras.preprocessing.image.load_img(mask_path)
     
     # Preprocess the image and mask
-    preprocessed_image = preprocess_image(image_path)
-    preprocessed_mask = preprocess_mask(mask_path)
+    preprocess = Preprocessor({'img_size': 224})
+    preprocessed_image = preprocess.preprocess_image(image_path)
+    preprocessed_mask = preprocess.preprocess_mask(mask_path)
 
     # Display the original image and mask
     plt.figure(figsize=(12, 6))
@@ -101,7 +102,29 @@ def create_class_pixel_table(masks: list) -> pd.DataFrame:
     return df
 
 
+# fonction display_results that takes a random image (with take) in a dataset and display the original image the mask and the prediction on the same line
+def display(display_list):
+  plt.figure(figsize=(15, 15))
 
+  title = ['Input Image', 'True Mask', 'Predicted Mask']
+
+  for i in range(len(display_list)):
+    plt.subplot(1, len(display_list), i+1)
+    plt.title(title[i])
+    plt.imshow(tf.keras.utils.array_to_img(display_list[i]))
+    plt.axis('off')
+  plt.show()
+
+def create_mask(pred_mask):
+  pred_mask = tf.argmax(pred_mask, axis=-1)
+  pred_mask = pred_mask[..., tf.newaxis]
+  return pred_mask[0]
+
+def show_predictions(model, dataset=None, num=1):
+  if dataset:
+    for image, mask in dataset.take(num):
+      pred_mask = model.predict(image)
+      display([image[0], mask[0], create_mask(pred_mask)])
 # Faire fonction qui prend en entrée un élément du dataset et affiche une image au hasard en reconvertissant le mask dans son format initiale
 
 # Faire fonction qui retourne summary des models
