@@ -49,7 +49,7 @@ class Trainer:
         history = self.model.fit(
             self.train_dataset,
             validation_data=self.val_dataset,
-            epochs=self.config['epochs']
+            epochs=self.config['epochs'],
             callbacks=self.callbacks
         )
         return history
