@@ -1,7 +1,8 @@
 if __name__ == "__main__":
     import os
-    from data_pipeline.sourcing.downloader import download_and_extract
-    from data_pipeline.sourcing.data_organizer import DataOrganizer
+    from utils.data_organizer import DataOrganizer
+    from data_pipeline.sourcing.downloader import Download
+
 
     config = {
     'base_dir' : 'data',
@@ -14,10 +15,10 @@ if __name__ == "__main__":
     # Download and extract the dataset if it doesn't exist
     if not os.path.exists(config['base_dir']):
         os.makedirs(config['base_dir'], exist_ok=True)
-
-        
         download_path = os.path.join(config['base_dir'], 'VOCtrainval_11-May-2012.tar')
-        download_and_extract(config['voc_url'], download_path, config['base_dir'])
+        downloader = Download(config['voc_url'], download_path, config['base_dir'])
+        downloader.download_file() 
+        downloader.extract_file()    
         os.remove(download_path)
 
     # Organize the dataset
