@@ -67,7 +67,7 @@ class DataLoader:
         if augment:
             augmented_datasets = []
             for aug in self.augmentor.augmentations:
-                augmented_dataset = dataset.map(lambda x, y: (aug(x), aug(y)),
+                augmented_dataset = dataset.map(lambda x, y: (aug(x), tf.cast(aug(y), tf.int32)),
                                                 num_parallel_calls=tf.data.AUTOTUNE)
                 augmented_datasets.append(augmented_dataset)
             for aug_ds in augmented_datasets:
