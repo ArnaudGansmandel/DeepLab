@@ -1,6 +1,7 @@
 # from data_pipeline.preprocessing.data_preprocessing_old import create_tf_dataset, load_and_preprocess_data
 from deep_lab.model import DeepLabV3Plus
 from data_pipeline.data_loader import DataLoader
+import tensorflow as tf
 from training.trainer import Trainer
 
 # Training configuration
@@ -26,12 +27,27 @@ if __name__ == "__main__":
     # Create the model
     model = DeepLabV3Plus()
 
-    for layer in model.backbone.resnet_model.layers:
-        layer.trainable = False
+
+    #model.backbone.trainable = False
+    # Freeze the layers in the ResNet backbone
+    # for layer in model.backbone.resnet_model.layers:
+        # if isinstance(layer, tf.keras.layers.BatchNormalization):
+        #     layer.trainable = True  # Keep BatchNormalization layers trainable
+        # else:
+        #     layer.trainable = False  # Freeze the other layers
+        # layer.trainable = False
+    # # Ensure ASPP and Decoder layers are trainable
+    # # Since these are `layers.Layer`, you'd need to iterate over their sublayers
+
+    # model.backbone.resnet_model.trainable = False
+    # model.aspp.trainable = True
+    # model.decoder.trainable = True
 
     # Create a Trainer instance
     trainer = Trainer(model=model, train_dataset=train_dataset, val_dataset=val_dataset, config=config)
-    
+
+
+
     # Load model from checkpoint if available
     trainer.load_from_checkpoint()
 
