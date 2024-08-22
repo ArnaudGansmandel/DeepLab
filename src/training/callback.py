@@ -4,14 +4,12 @@ import datetime
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 
 
-def create_callbacks(config, val_dataset, num_classes):
+def create_callbacks(config):
     """
     Creates and returns a list of callbacks for training.
 
     Args:
         config (dict): Configuration dictionary containing parameters.
-        val_dataset (tf.data.Dataset): Validation dataset.
-        num_classes (int): Number of classes for MeanIoU calculation.
 
     Returns:
         list: List of Keras callbacks.
