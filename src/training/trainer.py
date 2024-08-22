@@ -6,6 +6,8 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoa
 
 from training.learning_rate import PolyDecay
 from training.metrics import UpdatedMeanIoU
+from training.callback import create_callbacks
+
 
 class Trainer:
     def __init__(self, model, train_dataset, val_dataset, config):
@@ -17,34 +19,17 @@ class Trainer:
         poly_decay = PolyDecay(initial_learning_rate=config['learning_rate'], max_epochs=config['epochs'])
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=poly_decay, weight_decay=0.0005)
         self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-        self.metrics = ['accuracy', tf.keras.metrics.SparseCategoricalAccuracy(), UpdatedMeanIoU(num_classes=config['num_classes'], name='mean_iou')]
+        self.metrics = [
+            'accuracy', 
+            tf.keras.metrics.SparseCategoricalAccuracy(), 
+            UpdatedMeanIoU(num_classes=config['num_classes'])
+        ]
         
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn, metrics=self.metrics)
-                
-        # Setup logging directory
-        log_dir = os.path.join("results/logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-        self.tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-        # Setup checkpointing directory
-        checkpoint_dir = os.path.dirname(config['checkpoint_path'])
-        os.makedirs(checkpoint_dir, exist_ok=True)
+        # Create callbacks including the custom MeanIoU callback
+        self.callbacks = create_callbacks(config, self.val_dataset, config['num_classes'])
 
-        self.checkpoint_callback = ModelCheckpoint(
-            filepath=config['checkpoint_path'],
-            save_best_only=True,
-            monitor='mean_iou',
-            mode='max',  
-            verbose=1
-        )
-
-        # Setup callbacks
-        self.callbacks = [
-            EarlyStopping(monitor='val_mean_io_u', mode='max', patience=3, restore_best_weights=True),
-            ModelCheckpoint(filepath=config['checkpoint_path'], save_best_only=True),
-            self.checkpoint_callback,
-            self.tensorboard_callback
-        ]
-    
     def train(self):
         history = self.model.fit(
             self.train_dataset,
