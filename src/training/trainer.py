@@ -28,7 +28,7 @@ class Trainer:
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn, metrics=self.metrics)
 
         # Create callbacks including the custom MeanIoU callback
-        self.callbacks = create_callbacks(config, self.val_dataset, config['num_classes'])
+        self.callbacks = create_callbacks(config)
 
     def train(self):
         history = self.model.fit(
