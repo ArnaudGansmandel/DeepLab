@@ -25,7 +25,7 @@ class Trainer:
         log_dir = os.path.join("results/logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
         self.tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-        # Setup model checkpointing
+        # Setup checkpointing directory
         checkpoint_dir = os.path.dirname(config['checkpoint_path'])
         os.makedirs(checkpoint_dir, exist_ok=True)
 
