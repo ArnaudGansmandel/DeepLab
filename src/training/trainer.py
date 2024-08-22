@@ -21,6 +21,10 @@ class Trainer:
         
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn, metrics=self.metrics)
         
+        for layer in model.layers:
+            if layer.trainable:
+                print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}")
+                
         # Setup logging directory
         log_dir = os.path.join("results/logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
         self.tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
