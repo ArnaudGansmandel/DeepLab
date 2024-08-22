@@ -18,3 +18,7 @@ def print_all_layers(layer, indent=0):
         for sub_layer in layer.layers:
             print_all_layers(sub_layer, indent + 2)
 
+def print_model_variables(model):
+    for layer in model.layers:
+        if layer.trainable:
+            print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}, Non trainable variables: {layer.non_trainable_weights}")

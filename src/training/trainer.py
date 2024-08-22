@@ -20,10 +20,6 @@ class Trainer:
         self.metrics = ['accuracy', tf.keras.metrics.SparseCategoricalAccuracy(), UpdatedMeanIoU(num_classes=config['num_classes'], name='mean_iou')]
         
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn, metrics=self.metrics)
-        
-        for layer in model.layers:
-            if layer.trainable:
-                print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}")
                 
         # Setup logging directory
         log_dir = os.path.join("results/logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
