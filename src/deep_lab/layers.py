@@ -31,10 +31,10 @@ class ConvolutionBlock(layers.Layer):
     def call(self, inputs, training=None):
         x = self.conv(inputs)
         x = self.bn(x, training=training)
-        if self.activation:
-            x = self.relu(x)
         if self.dropout_rate > 0:
             x = self.dropout(x, training=training)
+        if self.activation:
+            x = self.relu(x)
         return x
 
 @tf.keras.utils.register_keras_serializable()
