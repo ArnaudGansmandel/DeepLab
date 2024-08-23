@@ -8,7 +8,7 @@ from training.trainer import Trainer
 config = {
     'learning_rate': 0.001,
     'fine_tuning_learning_rate': 0.00001,
-    'epochs': 20,
+    'epochs': 50,
     'batch_size': 16,
     'num_classes': 21,
     'img_size': 224,
