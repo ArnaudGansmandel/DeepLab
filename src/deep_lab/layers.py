@@ -131,7 +131,8 @@ class Backbone(layers.Layer):
     @tf.function
     def call(self, inputs, training=None):
         self.modify_resnet_layers()
-        x = self.resnet_model(inputs, training=training)
+        # Call resnet_model with training=False in order to keep BatchNorm in inference mode during fine-tuning
+        x = self.resnet_model(inputs, training=False)
         x = self.cascaded_blocks(x, training=training)
 
         low_level_feature = self.feature_extractor(inputs, training=training)
