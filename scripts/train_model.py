@@ -65,6 +65,7 @@ if __name__ == "__main__":
     model.backbone.resnet_model.trainable = True
 
     # Train the model
+    trainer = Trainer(model=model, train_dataset=trainval_dataset, val_dataset=val_dataset, config=config)
     trainer.train()
 
     # Save the final model
