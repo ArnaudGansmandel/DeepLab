@@ -26,8 +26,8 @@ class Trainer:
         ]
         
         self.model.compile(optimizer=self.optimizer, loss=self.loss_fn, metrics=self.metrics)
-
-        # Create callbacks including the custom MeanIoU callback
+        
+        # Create callbacks
         self.callbacks = create_callbacks(config)
 
     def train(self):
