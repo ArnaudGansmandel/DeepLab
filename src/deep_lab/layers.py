@@ -107,29 +107,30 @@ class Backbone(layers.Layer):
     def __init__(
             self,
             dropout_rate=0.0,
+            ouput_stride=8,
             name='backbone',
             **kwargs):
         super().__init__(name=name, **kwargs)
+        self.ouput_stride = ouput_stride
         self.resnet_model = ResNet101(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
         self.cascaded_blocks = CascadedBlocks(dropout_rate=dropout_rate)
         self.feature_extractor = FeatureExtractor(self.resnet_model, 'conv2_block3_out')
 
-    def modify_resnet_layers(self, output_stride):
+    def modify_resnet_layers(self):
         for layer in self.resnet_model.layers:
             if 'conv4_block' in layer.name or 'conv5_block' in layer.name:
                 if isinstance(layer, layers.Conv2D):
                     if 'conv4_block1_1_conv' in layer.name or 'conv4_block1_0_conv' in layer.name:
-                        layer.strides = (2 if output_stride == 16 else 1, 2 if output_stride == 16 else 1)
+                        layer.strides = (2 if self.ouput_stride == 16 else 1, 2 if self.ouput_stride == 16 else 1)
                     if 'conv4_block' in layer.name:
-                        layer.dilation_rate = (1 if output_stride == 16 else 2)
+                        layer.dilation_rate = (1 if self.ouput_stride == 16 else 2)
                     if 'conv5_block' in layer.name:
                         layer.strides = (1, 1)
-                        layer.dilation_rate = (2 if output_stride == 16 else 4)
-    
+                        layer.dilation_rate = (2 if self.ouput_stride == 16 else 4)
+        
     @tf.function
     def call(self, inputs, training=None):
-        output_stride = 16 if training else 8
-        self.modify_resnet_layers(output_stride=output_stride)
+        self.modify_resnet_layers()
         x = self.resnet_model(inputs, training=training)
         x = self.cascaded_blocks(x, training=training)
 
@@ -138,14 +139,19 @@ class Backbone(layers.Layer):
 
         return x, low_level_feature
 
+    def update_output_stride(self, output_stride):
+        self.output_stride = output_stride
+        
 @tf.keras.utils.register_keras_serializable()
 class ASPP(layers.Layer):
     def __init__(
             self, 
             filters=256, 
-            dropout_rate=0.0
+            dropout_rate=0.0,
+            ouput_stride=8,
         ):
         super().__init__()
+        self.ouput_stride = ouput_stride
         self.conv1 = ConvolutionBlock(filters, 1, dropout_rate=dropout_rate)
         self.conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
         self.conv3 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
@@ -154,23 +160,22 @@ class ASPP(layers.Layer):
         self.pool_conv = ConvolutionBlock(filters, 1, dropout_rate=dropout_rate)
         self.concat_conv = ConvolutionBlock(filters, 1, dropout_rate=dropout_rate)
 
-    def choice_dilation_rates(self, output_stride):
-        if output_stride == 16:
+    def choice_dilation_rates(self):
+        if self.ouput_stride == 16:
             return [6, 12, 18]
-        elif output_stride == 8:
+        elif self.ouput_stride == 8:
             return [12, 24, 36]
         else:
-            raise ValueError("Unsupported output stride: {}".format(output_stride))
+            raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
 
     def set_dilation_rates(self, dilation_rates):
         convs = [self.conv2, self.conv3, self.conv4]
         for conv, rate in zip(convs, dilation_rates):
             conv.conv.dilation_rate = (rate, rate)
-
+        
     @tf.function
     def call(self, inputs, training=None):
-        output_stride = 16 if training else 8
-        dilation_rates = self.choice_dilation_rates(output_stride)
+        dilation_rates = self.choice_dilation_rates()
         self.set_dilation_rates(dilation_rates)
 
         x1 = self.conv1(inputs, training=training)
@@ -186,10 +191,18 @@ class ASPP(layers.Layer):
         x = self.concat_conv(x, training=training)
         return x
 
+    def update_output_stride(self, output_stride):
+        self.output_stride = output_stride
+
 @tf.keras.utils.register_keras_serializable()
 class Decoder(layers.Layer):
-    def __init__(self, num_classes=21, filters=256, dropout_rate=0.0):
+    def __init__(self, 
+                 num_classes=21, 
+                 filters=256, 
+                 dropout_rate=0.0, 
+                 output_stride=8):
         super().__init__()
+        self.output_stride = output_stride
         self.decoder_conv1 = ConvolutionBlock(48, 1, dropout_rate=dropout_rate)
         self.decoder_conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
         self.decoder_conv3 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
@@ -197,7 +210,7 @@ class Decoder(layers.Layer):
 
     @tf.function
     def call(self, inputs, low_level_feature, training=None):
-        if training:
+        if self.output_stride == 16:
             x = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(inputs)
         else:
             x = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(inputs)
@@ -208,6 +221,9 @@ class Decoder(layers.Layer):
         x = self.decoder_conv3(x, training=training)
         x = self.final_conv(x)
         return x
+
+    def update_output_stride(self, output_stride):
+        self.output_stride = output_stride
 
 if __name__ == "__main__":
     # Example usage
