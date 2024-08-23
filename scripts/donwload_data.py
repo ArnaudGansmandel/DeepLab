@@ -1,7 +1,7 @@
 if __name__ == "__main__":
     import os
     from utils.data_organizer import DataOrganizer
-    from data_pipeline.sourcing.downloader import Download
+    from data_pipeline.downloader import Download
 
 
     config = {
