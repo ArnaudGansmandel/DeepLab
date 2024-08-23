@@ -7,6 +7,7 @@ from training.trainer import Trainer
 # Training configuration
 config = {
     'learning_rate': 0.001,
+    'fine_tuning_learning_rate': 0.00001,
     'epochs': 20,
     'batch_size': 16,
     'num_classes': 21,
@@ -25,28 +26,19 @@ if __name__ == "__main__":
     trainval_dataset = data_loader.load_data('trainval', augment=True)
 
     # Create the model
-    model = DeepLabV3Plus()
+    model = DeepLabV3Plus(dropout_rate=0.2, ouput_stride=16)
 
+    # Create a dummy input tensor with the shape (batch_size, height, width, channels)
+    dummy_input = tf.random.normal((1, config['img_size'], config['img_size'], 3))
 
-    #model.backbone.trainable = False
-    # Freeze the layers in the ResNet backbone
-    # for layer in model.backbone.resnet_model.layers:
-        # if isinstance(layer, tf.keras.layers.BatchNormalization):
-        #     layer.trainable = True  # Keep BatchNormalization layers trainable
-        # else:
-        #     layer.trainable = False  # Freeze the other layers
-        # layer.trainable = False
-    # # Ensure ASPP and Decoder layers are trainable
-    # # Since these are `layers.Layer`, you'd need to iterate over their sublayers
+    # Pass the dummy input through the model to initialize the layers
+    _ = model(dummy_input)
 
-    # model.backbone.resnet_model.trainable = False
-    # model.aspp.trainable = True
-    # model.decoder.trainable = True
+    # Freeze the ResNet backbone
+    model.backbone.resnet_model.trainable = False
 
     # Create a Trainer instance
     trainer = Trainer(model=model, train_dataset=train_dataset, val_dataset=val_dataset, config=config)
-
-
 
     # Load model from checkpoint if available
     trainer.load_from_checkpoint()
@@ -54,8 +46,27 @@ if __name__ == "__main__":
     # Train the model
     trainer.train()
 
-    # Evaluate the model
-    trainer.evaluate()
+    # Save the final model
+    trainer.save_model()
+
+    ## Fine-tune the model
+
+    # Set the learning rate to be the same as the fine-tuning learning rate
+    config['learning_rate']=config['fine_tuning_learning_rate']
+
+    # Update the model output stride
+    model.update_output_stride(8)
+
+    # Unfreeze the base_model. Note that it keeps running in inference mode
+    # since we passed `training=False` when calling it. This means that
+    # the batchnorm layers will not update their batch statistics.
+    # This prevents the batchnorm layers from undoing all the training
+    # we've done so far.    
+    model.backbone.resnet_model.trainable = True
+
+    # Train the model
+    trainer.train()
 
     # Save the final model
+    config['model_save_path'] = 'results/models/fine_tuned_model.h5'
     trainer.save_model()
