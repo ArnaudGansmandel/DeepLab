@@ -37,10 +37,16 @@ class Download:
             with tarfile.open(self.download_path, 'r') as tar:
                 tar.extractall(path=self.extract_path)
             logger.info("File extracted successfully.")
+        except requests.RequestException as e:
+            logger.error(f"Error downloading the file: {e}")
+            raise
         except tarfile.TarError as e:
             logger.error(f"Error extracting the tar file: {e}")
             raise
         except OSError as e:
             logger.error(f"File system error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
             raise
         
