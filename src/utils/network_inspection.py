@@ -9,8 +9,6 @@ def print_all_layers(layer, indent=0):
 
     if isinstance(layer, layers.Conv2D):
         layer_info += f", Filters: {layer.filters}, Kernel Size: {layer.kernel_size}, Strides: {layer.strides}, Dilation Rate: {layer.dilation_rate}"
-
-    layer_info += f", Input: {layer.input}"
     
     print(layer_info)
 
@@ -18,7 +16,13 @@ def print_all_layers(layer, indent=0):
         for sub_layer in layer.layers:
             print_all_layers(sub_layer, indent + 2)
 
-def print_model_variables(model):
-    for layer in model.layers:
-        if layer.trainable:
-            print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}, Non trainable variables: {layer.non_trainable_weights}")
+def print_trainable_variables(model=None, layer=None):
+    if hasattr(model, 'layers') and model is not None:
+        for layer in model.layers:
+                if hasattr(layer, 'layers'):
+                    if layer.trainable:
+                        print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}\nNon trainable variables: {layer.non_trainable_weights}")
+                elif layer.trainable:
+                    print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}\nNon trainable variables: {layer.non_trainable_weights}")
+    elif layer is not None:
+        print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}\nNon trainable variables: {layer.non_trainable_weights}")
