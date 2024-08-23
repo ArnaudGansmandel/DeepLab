@@ -21,8 +21,8 @@ def print_trainable_variables(model=None, layer=None):
         for layer in model.layers:
                 if hasattr(layer, 'layers'):
                     if layer.trainable:
-                        print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}\nNon trainable variables: {layer.non_trainable_weights}")
+                        print(f"Layer: {layer.name}, Trainable weights: {layer.trainable_weights}\nNon trainable weights: {layer.non_trainable_weights}\n\n")
                 elif layer.trainable:
-                    print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}\nNon trainable variables: {layer.non_trainable_weights}")
+                    print(f"Layer: {layer.name}, Trainable weights: {layer.trainable_weights}\nNon trainable weights: {layer.non_trainable_weights}\n\n")
     elif layer is not None:
-        print(f"Layer: {layer.name}, Weights: {layer.trainable_weights}\nNon trainable variables: {layer.non_trainable_weights}")
+        print(f"Layer: {layer.name}, Trainable weights: {layer.trainable_weights}\nNon trainable weights: {layer.non_trainable_weights}\n\n")
