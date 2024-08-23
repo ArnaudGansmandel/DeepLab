@@ -1,4 +1,4 @@
-from data_pipeline.processing import Preprocessor
+from data_pipeline.preprocessing import Preprocessor
 from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf

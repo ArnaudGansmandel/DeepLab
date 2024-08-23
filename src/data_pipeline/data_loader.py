@@ -1,7 +1,7 @@
 import os
 import pathlib
 import tensorflow as tf
-from data_pipeline.processing import Preprocessor
+from data_pipeline.preprocessing import Preprocessor
 from data_pipeline.augmentation import DataAugmentation
 
 class DataLoader:
