@@ -1,14 +1,3 @@
-import os
-from data_pipeline.preprocessing.encoder import rgb_to_label
-import numpy as np
-from sklearn.model_selection import train_test_split
-import tensorflow as tf
-from tensorflow.keras.preprocessing.image import load_img, img_to_array  # type: ignore
-
-IMG_SIZE = 224
-
-# src/data_pipeline/preprocessing.py
-
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.preprocessing.image import load_img, img_to_array  # type: ignore
