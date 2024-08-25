@@ -213,8 +213,10 @@ class Decoder(layers.Layer):
     def call(self, inputs, low_level_feature, training=None):
         if self.output_stride == 16:
             x = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(inputs)
-        else:
+        elif self.output_stride == 8:
             x = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(inputs)
+        else:
+            raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
         low_level_feature = self.decoder_conv1(low_level_feature, training=training)
         x = tf.concat([x, low_level_feature], axis=-1)
         x = self.decoder_conv2(x, training=training)
