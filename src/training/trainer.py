@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from tensorflow.keras.optimizers.schedules import PolynomialDecay
 
-from training.learning_rate import PolyDecay
+#from training.learning_rate import PolyDecay
 from training.metrics import UpdatedMeanIoU
 from training.callback import create_callbacks
 
@@ -19,7 +19,7 @@ class Trainer:
         
         #poly_decay = PolyDecay(initial_learning_rate=config['learning_rate'], max_epochs=config['epochs'])
         poly_decay = PolynomialDecay(initial_learning_rate=config['learning_rate'], decay_steps=2288, power=0.9)
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=poly_decay, weight_decay=0.0005)
+        self.optimizer = tf.keras.optimizers.AdamW(learning_rate=poly_decay, weight_decay=config['weight_decay'])
         self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         self.metrics = [
             'accuracy', 
