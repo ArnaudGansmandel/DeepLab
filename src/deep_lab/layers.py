@@ -18,7 +18,7 @@ class ConvolutionBlock(layers.Layer):
         ):
         super().__init__(name=name, **kwargs)
         self.conv = layers.Conv2D(filters, kernel_size, strides=strides, dilation_rate=dilation_rate, padding=padding, use_bias=False)
-        self.bn = layers.BatchNormalization()
+        self.bn = layers.BatchNormalization(momentum=0.9997)
         self.activation = activation
         if self.activation:
             self.relu = layers.ReLU()
@@ -141,9 +141,6 @@ class Backbone(layers.Layer):
         low_level_feature = tf.keras.layers.Lambda(lambda x: tf.stop_gradient(x))(low_level_feature)  # Avoid backpropagation
 
         return x, low_level_feature
-
-    def update_output_stride(self, output_stride):
-        self.output_stride = output_stride
         
 @tf.keras.utils.register_keras_serializable()
 class ASPP(layers.Layer):
@@ -193,9 +190,6 @@ class ASPP(layers.Layer):
         x = self.concat_conv(x, training=training)
         return x
 
-    def update_output_stride(self, output_stride):
-        self.output_stride = output_stride
-
 @tf.keras.utils.register_keras_serializable()
 class Decoder(layers.Layer):
     def __init__(self, 
@@ -222,7 +216,4 @@ class Decoder(layers.Layer):
         x = self.decoder_conv3(x, training=training)
         x = self.final_conv(x)
         return x
-
-    def update_output_stride(self, output_stride):
-        self.output_stride = output_stride
 
