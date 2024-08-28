@@ -21,7 +21,7 @@ class DeepLabV3Plus(Model):
 
     @tf.function
     def call(self, inputs, training=None):
-        if self.finetuning: training = False  # Put model in inference mode to keep BatchNorm in inference if fine-tuning
+        if self.finetuning: training = False  # Put the model in inference mode to keep BatchNorm in inference if fine-tuning
         x, low_level_feature = self.backbone(inputs, training=training)
         x = self.aspp(x,  training=training)
         x = self.decoder(x, low_level_feature, training=training)
