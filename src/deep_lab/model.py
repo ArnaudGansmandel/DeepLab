@@ -9,23 +9,20 @@ class DeepLabV3Plus(Model):
     def __init__(
             self,
             ouput_stride=8,
+            finetuning=False,
             name="DeepLabV3Plus",
             **kwargs
         ):
         super().__init__(name=name, **kwargs)
         self.ouput_stride = ouput_stride
+        self.finetuning = finetuning
         self.backbone = Backbone()
         self.aspp = ASPP()
         self.decoder = Decoder()
 
-    def update_output_stride(self, output_stride):
-        self.output_stride = output_stride
-        self.backbone.update_output_stride(output_stride)
-        self.aspp.update_output_stride(output_stride)
-        self.decoder.update_output_stride(output_stride)
-
     @tf.function
     def call(self, inputs, training=None):
+        if self.finetuning: training = False  # Put model in inference mode to keep BatchNorm in inference if fine-tuning
         x, low_level_feature = self.backbone(inputs, training=training)
         x = self.aspp(x,  training=training)
         x = self.decoder(x, low_level_feature, training=training)
