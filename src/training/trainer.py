@@ -27,7 +27,7 @@ class Trainer:
     
     def get_model(self):
         poly_decay = PolynomialDecay(initial_learning_rate=self.config['learning_rate'], decay_steps=self._set_decay_steps(), power=0.9)
-        self.optimizer = tf.keras.optimizers.AdamW(learning_rate=poly_decay, weight_decay=self.config['weight_decay'])
+        self.optimizer = tf.keras.optimizers.AdamW(learning_rate=poly_decay)
         self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         self.metrics = [
             'accuracy', 

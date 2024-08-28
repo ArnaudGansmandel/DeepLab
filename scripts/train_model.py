@@ -7,7 +7,6 @@ from training.trainer import Trainer
 config = {
     'learning_rate': 0.007,
     'fine_tuning_learning_rate': 0.001,
-    'weight_decay': 0.0003,
     'epochs': 5,
     'batch_size': 16,
     'num_classes': 21,
@@ -51,10 +50,6 @@ if __name__ == "__main__":
     trainer.model.save_weights('results/models/top_model.weights.h5')
 
     ## Fine-tune the model
-
-    # Set the learning rate to be the fine-tuning learning rate
-    config['learning_rate']=config['fine_tuning_learning_rate']
-
     # Create the model to be fine-tuned
     model = DeepLabV3Plus(ouput_stride=8, finetuning=True)
 
@@ -68,10 +63,12 @@ if __name__ == "__main__":
     # layers from undoing all the training we've done so far.    
     model.trainable = True
 
+    # Set the learning rate to be the fine-tuning learning rate
+    config['learning_rate']=config['fine_tuning_learning_rate']
+
     # Train the model
     trainer = Trainer(model=model, train_dataset=trainval_dataset, val_dataset=val_dataset, config=config)
     trainer.train()
 
     # Save the final model
-    config['model_save_path'] = 'results/models/fine_tuned_model.weights.h5'
     trainer.model.save_weights('results/models/fine_tuned_model.weights.h5')
