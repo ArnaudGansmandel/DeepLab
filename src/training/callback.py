@@ -5,15 +5,6 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStoppi
 
 
 def create_callbacks(config):
-    """
-    Creates and returns a list of callbacks for training.
-
-    Args:
-        config (dict): Configuration dictionary containing parameters.
-
-    Returns:
-        list: List of Keras callbacks.
-    """
     # Setup logging directory for TensorBoard
     log_dir = os.path.join("results/logs", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
@@ -25,6 +16,7 @@ def create_callbacks(config):
     checkpoint_callback = ModelCheckpoint(
         filepath=config['checkpoint_filepath'],
         save_best_only=True,
+        save_weights_only=True,
         monitor='val_updated_mean_io_u',
         mode='max',
         verbose=1
