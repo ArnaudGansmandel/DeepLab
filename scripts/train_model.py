@@ -2,6 +2,7 @@ from deep_lab.model import DeepLabV3Plus
 from data_pipeline.data_loader import DataLoader
 import tensorflow as tf
 from training.trainer import Trainer
+from utils.plotting import show_predictions
 
 # Training configuration
 config = {
@@ -46,6 +47,9 @@ if __name__ == "__main__":
     # Train the model
     trainer.train()
 
+    # Show some predictions
+    show_predictions(trainer.model, dataset=val_dataset, num=3)
+    
     # Save the final model
     trainer.model.save_weights('results/models/top_model.weights.h5')
 
@@ -69,6 +73,9 @@ if __name__ == "__main__":
     # Train the model
     trainer = Trainer(model=model, train_dataset=trainval_dataset, val_dataset=val_dataset, config=config)
     trainer.train()
+
+    # Show some predictions
+    show_predictions(trainer.model, dataset=val_dataset, num=3)
 
     # Save the final model
     trainer.model.save_weights('results/models/fine_tuned_model.weights.h5')
