@@ -8,16 +8,15 @@ from utils.network_inspection import print_all_layers, print_trainable_variables
 class DeepLabV3Plus(Model):
     def __init__(
             self,
-            dropout_rate=0.0,
             ouput_stride=8,
             name="DeepLabV3Plus",
             **kwargs
         ):
         super().__init__(name=name, **kwargs)
         self.ouput_stride = ouput_stride
-        self.backbone = Backbone(dropout_rate=dropout_rate)
-        self.aspp = ASPP(dropout_rate=dropout_rate)
-        self.decoder = Decoder(dropout_rate=dropout_rate)
+        self.backbone = Backbone()
+        self.aspp = ASPP()
+        self.decoder = Decoder()
 
     def update_output_stride(self, output_stride):
         self.output_stride = output_stride
