@@ -19,11 +19,11 @@ def create_callbacks(config):
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 
     # Setup model checkpointing
-    checkpoint_dir = os.path.dirname(config['checkpoint_path'])
+    checkpoint_dir = os.path.dirname(config['checkpoint_filepath'])
     os.makedirs(checkpoint_dir, exist_ok=True)
 
     checkpoint_callback = ModelCheckpoint(
-        filepath=config['checkpoint_path'],
+        filepath=config['checkpoint_filepath'],
         save_best_only=True,
         monitor='val_updated_mean_io_u',
         mode='max',
