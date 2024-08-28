@@ -3,7 +3,7 @@ import datetime
 import os
 import tensorflow as tf
 import keras
-from tensorflow.keras.optimizers.schedules import PolynomialDecay, MeanIoU
+from tensorflow.keras.optimizers.schedules import PolynomialDecay
 
 from training.callback import create_callbacks
 
