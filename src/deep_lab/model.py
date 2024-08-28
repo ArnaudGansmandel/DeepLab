@@ -4,7 +4,6 @@ from tensorflow.keras.models import Model
 from deep_lab.layers import ASPP, Decoder, Backbone
 from utils.network_inspection import print_all_layers, print_trainable_variables
 
-@tf.keras.utils.register_keras_serializable()
 class DeepLabV3Plus(Model):
     def __init__(
             self,

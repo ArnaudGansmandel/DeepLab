@@ -3,7 +3,6 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Model 
 from tensorflow.keras.applications import ResNet101
 
-@tf.keras.utils.register_keras_serializable()
 class ConvolutionBlock(layers.Layer):
     def __init__(
             self, 
@@ -31,7 +30,6 @@ class ConvolutionBlock(layers.Layer):
             x = self.relu(x)
         return x
 
-@tf.keras.utils.register_keras_serializable()
 class ResNetBlock(layers.Layer):
     def __init__(
             self, 
@@ -59,7 +57,6 @@ class ResNetBlock(layers.Layer):
         x = self.relu_out(x)
         return x
 
-@tf.keras.utils.register_keras_serializable()
 class CascadedBlocks(layers.Layer):
     def __init__(
             self,
@@ -92,7 +89,6 @@ class CascadedBlocks(layers.Layer):
             dilation_rate *= 2
         return x
 
-@tf.keras.utils.register_keras_serializable()
 class FeatureExtractor(layers.Layer):
     def __init__(self, model, layer_name, name='feature_extractor', **kwargs):
         super().__init__(name=name, **kwargs)
@@ -105,7 +101,6 @@ class FeatureExtractor(layers.Layer):
                                             outputs=self.model.get_layer(self.layer_name).output)
         return intermediate_model(inputs)
 
-@tf.keras.utils.register_keras_serializable()
 class Backbone(layers.Layer):
     def __init__(
             self,
@@ -142,7 +137,6 @@ class Backbone(layers.Layer):
 
         return x, low_level_feature
         
-@tf.keras.utils.register_keras_serializable()
 class ASPP(layers.Layer):
     def __init__(
             self, 
@@ -190,7 +184,6 @@ class ASPP(layers.Layer):
         x = self.concat_conv(x, training=training)
         return x
 
-@tf.keras.utils.register_keras_serializable()
 class Decoder(layers.Layer):
     def __init__(self, 
                  num_classes=21, 
