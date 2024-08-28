@@ -22,7 +22,7 @@ if __name__ == "__main__":
     data_loader = DataLoader(config)
 
     # Create the datasets
-    train_dataset = data_loader.load_data('train', augment=True)
+    trainaug_dataset = data_loader.load_data('train', augment=True)
     val_dataset = data_loader.load_data('val', augment=False)
     trainval_dataset = data_loader.load_data('trainval', augment=False)
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     model.backbone.resnet_model.trainable = False
 
     # Create a Trainer instance
-    trainer = Trainer(model=model, train_dataset=train_dataset, val_dataset=val_dataset, config=config)
+    trainer = Trainer(model=model, train_dataset=trainaug_dataset, val_dataset=val_dataset, config=config)
 
     # Load model from checkpoint if available
     trainer.load_from_checkpoint()
