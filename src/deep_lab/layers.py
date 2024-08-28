@@ -13,7 +13,6 @@ class ConvolutionBlock(layers.Layer):
             dilation_rate=1, 
             padding='same', 
             activation=True, 
-            dropout_rate=0.0,
             name='convolution_block',
             **kwargs
         ):
@@ -23,16 +22,11 @@ class ConvolutionBlock(layers.Layer):
         self.activation = activation
         if self.activation:
             self.relu = layers.ReLU()
-        self.dropout_rate = dropout_rate
-        if self.dropout_rate > 0:
-            self.dropout = layers.Dropout(self.dropout_rate)
 
     @tf.function
     def call(self, inputs, training=None):
         x = self.conv(inputs)
         x = self.bn(x, training=training)
-        if self.dropout_rate > 0:
-            x = self.dropout(x, training=training)
         if self.activation:
             x = self.relu(x)
         return x
@@ -44,14 +38,13 @@ class ResNetBlock(layers.Layer):
             filters=512, 
             dilation_rate=1, 
             multi_grid=(1, 2, 1),
-            dropout_rate=0.0,
             name='resnet_block',
             **kwargs
         ):
         super().__init__(name=name, **kwargs)
-        self.conv1 = ConvolutionBlock(filters, 1, dilation_rate=dilation_rate * multi_grid[0], activation=True, dropout_rate=dropout_rate)
-        self.conv2 = ConvolutionBlock(filters, 3, dilation_rate=dilation_rate * multi_grid[1], activation=True, dropout_rate=dropout_rate)
-        self.conv3 = ConvolutionBlock(filters*4, 1, dilation_rate=dilation_rate * multi_grid[2], activation=False, dropout_rate=dropout_rate)
+        self.conv1 = ConvolutionBlock(filters, 1, dilation_rate=dilation_rate * multi_grid[0], activation=True)
+        self.conv2 = ConvolutionBlock(filters, 3, dilation_rate=dilation_rate * multi_grid[1], activation=True)
+        self.conv3 = ConvolutionBlock(filters*4, 1, dilation_rate=dilation_rate * multi_grid[2], activation=False)
 
         self.add = layers.Add()
         self.relu_out = layers.ReLU()
@@ -71,17 +64,27 @@ class CascadedBlocks(layers.Layer):
     def __init__(
             self,
             num_extra_blocks=3, 
-            dropout_rate=0.0,
+            output_stride=8,
             name='cascaded_blocks',
             **kwargs
         ):
         super().__init__(name=name, **kwargs)
         self.num_extra_blocks = num_extra_blocks
-        self.resnet_blocks = [ResNetBlock(dropout_rate=dropout_rate) for _ in range(num_extra_blocks)]
+        self.output_stride = output_stride
+        self.resnet_blocks = [ResNetBlock() for _ in range(num_extra_blocks)]
     
+    def set_dilation_rate(self):
+        if self.output_stride == 16:
+            dilation_rate = 4
+        elif self.output_stride == 8:
+            dilation_rate = 8
+        else:
+            raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
+        return dilation_rate
+
     @tf.function
     def call(self, inputs, training=None):
-        dilation_rate = 4 if training else 8
+        dilation_rate = self.set_dilation_rate()
         x = inputs
         for i in range(self.num_extra_blocks):
             self.resnet_blocks[i].dilation_rate = (dilation_rate, dilation_rate)
@@ -106,14 +109,13 @@ class FeatureExtractor(layers.Layer):
 class Backbone(layers.Layer):
     def __init__(
             self,
-            dropout_rate=0.0,
             ouput_stride=8,
             name='backbone',
             **kwargs):
         super().__init__(name=name, **kwargs)
         self.ouput_stride = ouput_stride
         self.resnet_model = ResNet101(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-        self.cascaded_blocks = CascadedBlocks(dropout_rate=dropout_rate)
+        self.cascaded_blocks = CascadedBlocks()
         self.feature_extractor = FeatureExtractor(self.resnet_model, 'conv2_block3_out')
 
     def modify_resnet_layers(self):
@@ -148,18 +150,17 @@ class ASPP(layers.Layer):
     def __init__(
             self, 
             filters=256, 
-            dropout_rate=0.0,
             ouput_stride=8,
         ):
         super().__init__()
         self.ouput_stride = ouput_stride
-        self.conv1 = ConvolutionBlock(filters, 1, dropout_rate=dropout_rate)
-        self.conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
-        self.conv3 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
-        self.conv4 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
+        self.conv1 = ConvolutionBlock(filters, 1)
+        self.conv2 = ConvolutionBlock(filters, 3)
+        self.conv3 = ConvolutionBlock(filters, 3)
+        self.conv4 = ConvolutionBlock(filters, 3)
         self.pool = layers.GlobalAveragePooling2D()
-        self.pool_conv = ConvolutionBlock(filters, 1, dropout_rate=dropout_rate)
-        self.concat_conv = ConvolutionBlock(filters, 1, dropout_rate=dropout_rate)
+        self.pool_conv = ConvolutionBlock(filters, 1)
+        self.concat_conv = ConvolutionBlock(filters, 1)
 
     def choice_dilation_rates(self):
         if self.ouput_stride == 16:
@@ -200,23 +201,20 @@ class Decoder(layers.Layer):
     def __init__(self, 
                  num_classes=21, 
                  filters=256, 
-                 dropout_rate=0.0, 
                  output_stride=8):
         super().__init__()
         self.output_stride = output_stride
-        self.decoder_conv1 = ConvolutionBlock(48, 1, dropout_rate=dropout_rate)
-        self.decoder_conv2 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
-        self.decoder_conv3 = ConvolutionBlock(filters, 3, dropout_rate=dropout_rate)
+        self.decoder_conv1 = ConvolutionBlock(48, 1)
+        self.decoder_conv2 = ConvolutionBlock(filters, 3)
+        self.decoder_conv3 = ConvolutionBlock(filters, 3)
         self.final_conv = layers.Conv2D(num_classes, 1)
 
     @tf.function
     def call(self, inputs, low_level_feature, training=None):
-        if self.output_stride == 16:
-            x = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(inputs)
-        elif self.output_stride == 8:
-            x = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(inputs)
-        else:
-            raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
+        if self.output_stride == 16: upsampling = 4
+        elif self.output_stride == 8: upsampling = 2
+        else: raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
+        x = layers.UpSampling2D(size=(upsampling, upsampling), interpolation='bilinear')(inputs)
         low_level_feature = self.decoder_conv1(low_level_feature, training=training)
         x = tf.concat([x, low_level_feature], axis=-1)
         x = self.decoder_conv2(x, training=training)
@@ -228,23 +226,3 @@ class Decoder(layers.Layer):
     def update_output_stride(self, output_stride):
         self.output_stride = output_stride
 
-if __name__ == "__main__":
-    # Example usage
-    IMG_SIZE = 224
-    input_shape = (IMG_SIZE, IMG_SIZE, 3)
-    input = tf.keras.Input(shape=input_shape)
-    resnet_with_atrous_blocks_training = Backbone()
-    resnet_with_atrous_blocks_inference = Backbone()
-
-    output_training = resnet_with_atrous_blocks_training(input, training=True)
-    output_inference = resnet_with_atrous_blocks_inference(input, training=False)
-    
-    print("Backbone in training mode")
-    resnet_with_atrous_blocks_training = Model(inputs=input, outputs=output_training)
-    resnet_with_atrous_blocks_training.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    resnet_with_atrous_blocks_training.summary()
-
-    print("Backbone in inference mode")
-    resnet_with_atrous_blocks_inference = Model(inputs=input, outputs=output_inference)
-    resnet_with_atrous_blocks_inference.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    resnet_with_atrous_blocks_inference.summary()
