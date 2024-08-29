@@ -17,14 +17,14 @@ def create_callbacks(config):
         filepath=config['checkpoint_filepath'],
         save_best_only=True,
         save_weights_only=True,
-        monitor='val_updated_mean_io_u',
+        monitor='val_mean_io_u',
         mode='max',
         verbose=1
     )
 
     # Setup early stopping
     early_stopping_callback = EarlyStopping(
-        monitor='val_updated_mean_io_u',
+        monitor='val_mean_io_u',
         mode='max',
         patience=3,
         restore_best_weights=True
