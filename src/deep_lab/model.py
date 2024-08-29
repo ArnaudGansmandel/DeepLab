@@ -34,7 +34,7 @@ if __name__ == "__main__":
     input = tf.keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))    
 
     print("DeepLabV3Plus summary")
-    deeplab_model_training = DeepLabV3Plus(dropout_rate=0.2, ouput_stride=16)
+    deeplab_model_training = DeepLabV3Plus( ouput_stride=16)
 
     # Create a dummy input tensor with the shape (batch_size, height, width, channels)
     dummy_input = tf.random.normal((1, IMG_SIZE, IMG_SIZE, 3))
