@@ -8,7 +8,7 @@ from utils.plotting import show_predictions
 config = {
     'learning_rate': 0.007,
     'fine_tuning_learning_rate': 0.001,
-    'epochs': 5,
+    'epochs': 3,
     'batch_size': 16,
     'num_classes': 21,
     'img_size': 224,
@@ -53,29 +53,4 @@ if __name__ == "__main__":
     # Save the final model
     trainer.model.save_weights('results/models/top_model.weights.h5')
 
-    ## Fine-tune the model
-    # Create the model to be fine-tuned
-    model = DeepLabV3Plus(ouput_stride=8, finetuning=True)
 
-    # Pass the dummy input through the model to initialize the layers
-    _ = model(dummy_input)
-
-    # Unfreeze the model. Note that it keeps running in inference mode
-    # since we passed `training=False` when calling it due to the 
-    # finetuning argument. This means that the batchnorm layers will 
-    # not update their batch statistics. This prevents the batchnorm 
-    # layers from undoing all the training we've done so far.    
-    model.trainable = True
-
-    # Set the learning rate to be the fine-tuning learning rate
-    config['learning_rate']=config['fine_tuning_learning_rate']
-
-    # Train the model
-    trainer = Trainer(model=model, train_dataset=trainval_dataset, val_dataset=val_dataset, config=config)
-    trainer.train()
-
-    # Show some predictions
-    show_predictions(trainer.model, dataset=val_dataset, num=3)
-
-    # Save the final model
-    trainer.model.save_weights('results/models/fine_tuned_model.weights.h5')
