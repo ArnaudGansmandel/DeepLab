@@ -24,7 +24,7 @@ if __name__ == "__main__":
     test_dataset = data_loader.load_data('test')
 
     # Create the model
-    model = DeepLabV3Plus(dropout_rate=0.2, ouput_stride=16)
+    model = DeepLabV3Plus(ouput_stride=8)
 
     # Create a Trainer instance
     trainer = Trainer(model=model, val_dataset=test_dataset, config=config)
