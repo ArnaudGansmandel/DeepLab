@@ -1,3 +1,4 @@
+# src\deep_lab\layers.py
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model 
@@ -142,9 +143,11 @@ class ASPP(layers.Layer):
             self, 
             filters=256, 
             ouput_stride=8,
+            name='aspp',
+            **kwargs
         ):
-        super().__init__()
-        self.ouput_stride = ouput_stride
+        super().__init__(name=name, **kwargs)
+        self.output_stride = ouput_stride
         self.conv1 = ConvolutionBlock(filters, 1)
         self.conv2 = ConvolutionBlock(filters, 3)
         self.conv3 = ConvolutionBlock(filters, 3)
@@ -154,12 +157,12 @@ class ASPP(layers.Layer):
         self.concat_conv = ConvolutionBlock(filters, 1)
 
     def choice_dilation_rates(self):
-        if self.ouput_stride == 16:
+        if self.output_stride == 16:
             return [6, 12, 18]
-        elif self.ouput_stride == 8:
+        elif self.output_stride == 8:
             return [12, 24, 36]
         else:
-            raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
+            raise ValueError("Unsupported output stride: {}".format(self.output_stride))
 
     def set_dilation_rates(self, dilation_rates):
         convs = [self.conv2, self.conv3, self.conv4]
@@ -188,8 +191,10 @@ class Decoder(layers.Layer):
     def __init__(self, 
                  num_classes=21, 
                  filters=256, 
-                 output_stride=8):
-        super().__init__()
+                 output_stride=8,
+                 name='decoder',
+                 **kwargs):
+        super().__init__(name=name, **kwargs)
         self.output_stride = output_stride
         self.decoder_conv1 = ConvolutionBlock(48, 1)
         self.decoder_conv2 = ConvolutionBlock(filters, 3)
