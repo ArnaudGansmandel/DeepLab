@@ -77,7 +77,7 @@ class CascadedBlocks(layers.Layer):
         elif self.output_stride == 8:
             dilation_rate = 8
         else:
-            raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
+            raise ValueError("Unsupported output stride: {}".format(self.output_stride))
         return dilation_rate
 
     @tf.function
@@ -105,11 +105,11 @@ class FeatureExtractor(layers.Layer):
 class Backbone(layers.Layer):
     def __init__(
             self,
-            ouput_stride=8,
+            output_stride=8,
             name='backbone',
             **kwargs):
         super().__init__(name=name, **kwargs)
-        self.ouput_stride = ouput_stride
+        self.output_stride = output_stride
         self.resnet_model = ResNet101(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
         self.cascaded_blocks = CascadedBlocks()
         self.feature_extractor = FeatureExtractor(self.resnet_model, 'conv2_block3_out')
@@ -119,12 +119,12 @@ class Backbone(layers.Layer):
             if 'conv4_block' in layer.name or 'conv5_block' in layer.name:
                 if isinstance(layer, layers.Conv2D):
                     if 'conv4_block1_1_conv' in layer.name or 'conv4_block1_0_conv' in layer.name:
-                        layer.strides = (2 if self.ouput_stride == 16 else 1, 2 if self.ouput_stride == 16 else 1)
+                        layer.strides = (2 if self.output_stride == 16 else 1, 2 if self.output_stride == 16 else 1)
                     if 'conv4_block' in layer.name:
-                        layer.dilation_rate = (1 if self.ouput_stride == 16 else 2)
+                        layer.dilation_rate = (1 if self.output_stride == 16 else 2)
                     if 'conv5_block' in layer.name:
                         layer.strides = (1, 1)
-                        layer.dilation_rate = (2 if self.ouput_stride == 16 else 4)
+                        layer.dilation_rate = (2 if self.output_stride == 16 else 4)
         
     @tf.function
     def call(self, inputs, training=None):
@@ -142,12 +142,12 @@ class ASPP(layers.Layer):
     def __init__(
             self, 
             filters=256, 
-            ouput_stride=8,
+            output_stride=8,
             name='aspp',
             **kwargs
         ):
         super().__init__(name=name, **kwargs)
-        self.output_stride = ouput_stride
+        self.output_stride = output_stride
         self.conv1 = ConvolutionBlock(filters, 1)
         self.conv2 = ConvolutionBlock(filters, 3)
         self.conv3 = ConvolutionBlock(filters, 3)
@@ -205,7 +205,7 @@ class Decoder(layers.Layer):
     def call(self, inputs, low_level_feature, training=None):
         if self.output_stride == 16: upsampling = 4
         elif self.output_stride == 8: upsampling = 2
-        else: raise ValueError("Unsupported output stride: {}".format(self.ouput_stride))
+        else: raise ValueError("Unsupported output stride: {}".format(self.output_stride))
         x = layers.UpSampling2D(size=(upsampling, upsampling), interpolation='bilinear')(inputs)
         low_level_feature = self.decoder_conv1(low_level_feature, training=training)
         x = tf.concat([x, low_level_feature], axis=-1)
