@@ -1,6 +1,6 @@
 # evaluate.py --  files responsible for the evaluation of different models. Loading and selecting the best model
 
-from deep_lab.model import DeepLabV3Plus
+from deep_lab.models.model import DeepLabV3Plus
 from data_pipeline.data_loader import DataLoader
 from training.trainer import Trainer
 
@@ -24,13 +24,7 @@ if __name__ == "__main__":
     test_dataset = data_loader.load_data('test')
 
     # Create the model
-    model = DeepLabV3Plus(ouput_stride=8)
+    model = DeepLabV3Plus()
+    model.load_weights('results/models/top_model.weights.h5')
 
-    # Create a Trainer instance
-    trainer = Trainer(model=model, val_dataset=test_dataset, config=config)
-
-    # Load model
-    trainer.load_model()
-
-    # Evaluate the model
-    trainer.evaluate()
+    model.evaluate(test_dataset)
