@@ -1,5 +1,6 @@
+# scripts\finetune.py
 from data_pipeline import data_loader
-from deep_lab.model import DeepLabV3Plus
+from deep_lab.models.model import DeepLabV3Plus
 from data_pipeline.data_loader import DataLoader
 import tensorflow as tf
 from training.trainer import Trainer
