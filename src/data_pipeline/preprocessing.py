@@ -1,3 +1,4 @@
+# src\data_pipeline\preprocessing.py
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.preprocessing.image import load_img, img_to_array  # type: ignore
@@ -55,7 +56,8 @@ class Preprocessor:
                                  [0, 128, 128], [128, 128, 128], [64, 0, 0], [192, 0, 0], [64, 128, 0], [192, 128, 0],
                                  [64, 0, 128], [192, 0, 128], [64, 128, 128], [192, 128, 128], [0, 64, 0], [128, 64, 0],
                                  [0, 192, 0], [128, 192, 0], [0, 64, 128]])
-        label_mask = np.zeros(mask.shape[:2], dtype=np.uint8)
+        # label_mask = np.zeros(mask.shape[:2], dtype=np.uint8)
+        label_mask = np.zeros(mask.shape[:2], dtype=np.uint32)
         for i, col in enumerate(VOC_COLORMAP):            
             mask_equal = tf.reduce_all(tf.equal(mask, col), axis=-1)
             label_mask = tf.where(mask_equal, i, label_mask)
